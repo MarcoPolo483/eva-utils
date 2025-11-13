@@ -1,0 +1,1 @@
+{"version":3,"file":"tokenBudget.d.ts","sourceRoot":"","sources":["../../src/budget/tokenBudget.ts"],"names":[],"mappings":"AAAA,MAAM,MAAM,kBAAkB,GAAG;IAC/B,KAAK,EAAE,MAAM,CAAC;CACf,CAAC;AAEF,qBAAa,WAAW;IAEV,OAAO,CAAC,IAAI;IADxB,OAAO,CAAC,IAAI,CAAK;gBACG,IAAI,EAAE,kBAAkB;IAI5C,KAAK,CAAC,MAAM,EAAE,MAAM;IAMpB,SAAS;IAIT,KAAK;CAGN"}
