@@ -1,17 +1,26 @@
-import { context, trace } from "@opentelemetry/api";
-function withTrace(data) {
-    const span = trace.getSpan(context.active());
-    const spanContext = span?.spanContext();
-    const traceId = spanContext?.traceId;
-    return { ...(data || {}), ...(traceId ? { traceId } : {}) };
-}
+import pino from "pino";
+import { getTraceContext } from "../otel/context.js";
 export function createLogger(opts = {}) {
-    const base = { service: opts.service || "eva-utils" };
-    return {
-        info: (msg, data) => console.log(JSON.stringify({ level: "info", msg, ...base, ...withTrace(data) })),
-        warn: (msg, data) => console.warn(JSON.stringify({ level: "warn", msg, ...base, ...withTrace(data) })),
-        error: (msg, data) => console.error(JSON.stringify({ level: "error", msg, ...base, ...withTrace(data) })),
-        debug: (msg, data) => console.debug(JSON.stringify({ level: "debug", msg, ...base, ...withTrace(data) }))
-    };
+    const logger = pino({
+        level: opts.level ?? process.env.LOG_LEVEL ?? "info",
+        redact: { paths: opts.redact ?? ["password", "token", "authorization"], censor: "[REDACTED]" },
+        base: {
+            service: opts.service ?? process.env.SERVICE_NAME ?? "eva-utils",
+            env: process.env.NODE_ENV ?? "development",
+            ...(opts.base ?? {}),
+        },
+        hooks: {
+            logMethod(args, method) {
+                const ctx = getTraceContext();
+                if (args.length > 1 && typeof args[1] === "object") {
+                    method.apply(this, [args[0], { ...args[1], ...ctx }]);
+                }
+                else {
+                    method.apply(this, [args[0], ctx]);
+                }
+            },
+        },
+    });
+    return logger;
 }
 //# sourceMappingURL=logger.js.map

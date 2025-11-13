@@ -3,7 +3,7 @@ export class CircuitBreaker {
     state = "closed";
     failures = 0;
     successes = 0;
-    nextTry = 0;
+    nextTryAt = 0;
     constructor(opts = {}) {
         this.opts = opts;
     }
@@ -13,15 +13,17 @@ export class CircuitBreaker {
         const successThreshold = Math.max(1, this.opts.successThreshold ?? 2);
         const cooldownMs = Math.max(1000, this.opts.cooldownMs ?? 10000);
         if (this.state === "open") {
-            if (now >= this.nextTry) {
+            if (now >= this.nextTryAt) {
                 this.state = "half-open";
+                this.failures = 0;
+                this.successes = 0;
             }
             else {
-                throw new Error("CircuitBreaker: open");
+                throw new Error("Circuit open");
             }
         }
         try {
-            const result = await fn();
+            const res = await fn();
             if (this.state === "half-open") {
                 this.successes++;
                 if (this.successes >= successThreshold) {
@@ -29,9 +31,9 @@ export class CircuitBreaker {
                 }
             }
             else {
-                this.reset();
+                this.resetCounts();
             }
-            return result;
+            return res;
         }
         catch (e) {
             this.failures++;
@@ -41,19 +43,16 @@ export class CircuitBreaker {
             throw e;
         }
     }
-    open(cooldownMs) {
+    open(ms) {
         this.state = "open";
-        this.nextTry = Date.now() + cooldownMs;
-        this.failures = 0;
-        this.successes = 0;
+        this.nextTryAt = Date.now() + ms;
     }
     close() {
         this.state = "closed";
-        this.failures = 0;
-        this.successes = 0;
-        this.nextTry = 0;
+        this.nextTryAt = 0;
+        this.resetCounts();
     }
-    reset() {
+    resetCounts() {
         this.failures = 0;
         this.successes = 0;
     }

@@ -8,11 +8,11 @@ export declare class CircuitBreaker {
     private state;
     private failures;
     private successes;
-    private nextTry;
+    private nextTryAt;
     constructor(opts?: CircuitBreakerOptions);
     exec<T>(fn: () => Promise<T>): Promise<T>;
     private open;
     private close;
-    private reset;
+    private resetCounts;
 }
 //# sourceMappingURL=circuitBreaker.d.ts.map

@@ -1,29 +1,85 @@
-export type RetryOptions = {
-  retries?: number;     // number of retries (not attempts)
-  baseMs?: number;      // base delay for exponential backoff
-  maxMs?: number;       // max delay cap
-  jitter?: boolean;     // add jitter
-  shouldRetry?: (e: unknown) => boolean;
+import { expoDelay, BackoffOptions } from "./backoff.js";
+
+export type RetryOptions = BackoffOptions & {
+  retries?: number;          // number of retries (not attempts)
+  timeoutMs?: number;        // per-attempt timeout
+  classify?: (e: unknown) => "retry" | "fail"; // classify errors
+  signal?: AbortSignal;      // cancellation
 };
 
 export async function retry<T>(fn: () => Promise<T>, opts: RetryOptions = {}): Promise<T> {
   const retries = Math.max(0, opts.retries ?? 3);
-  const baseMs = Math.max(1, opts.baseMs ?? 250);
-  const maxMs = Math.max(baseMs, opts.maxMs ?? 5000);
-  const jitter = opts.jitter ?? true;
-  const shouldRetry = opts.shouldRetry ?? (() => true);
+  const classify = opts.classify ?? (() => "retry");
 
   let attempt = 0;
-  // First attempt without delay
   while (true) {
     try {
-      return await fn();
+      const res = await runWithTimeout(fn, opts.timeoutMs, opts.signal);
+      return res;
     } catch (e) {
-      if (attempt >= retries || !shouldRetry(e)) throw e;
-      const delay = Math.min(maxMs, baseMs * Math.pow(2, attempt));
-      const sleep = jitter ? Math.random() * delay : delay;
-      await new Promise((r) => setTimeout(r, sleep));
+      const mode = classify(e);
+      if (mode === "fail" || attempt >= retries || opts.signal?.aborted) {
+        throw e;
+      }
+      const delay = expoDelay(attempt, opts);
+      await sleep(delay, opts.signal);
       attempt++;
     }
   }
+}
+
+async function runWithTimeout<T>(fn: () => Promise<T>, timeoutMs?: number, signal?: AbortSignal): Promise<T> {
+  if (!timeoutMs && !signal) return fn();
+
+  return new Promise<T>((resolve, reject) => {
+    let done = false;
+
+    const onAbort = () => {
+      if (done) return;
+      done = true;
+      reject(new Error("Retry aborted"));
+    };
+
+    let to: NodeJS.Timeout | undefined;
+    if (timeoutMs) {
+      to = setTimeout(() => {
+        if (done) return;
+        done = true;
+        reject(new Error("Retry timeout"));
+      }, timeoutMs);
+    }
+
+    if (signal) {
+      if (signal.aborted) return onAbort();
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+
+    fn().then(
+      (v) => {
+        if (done) return;
+        done = true;
+        if (to) clearTimeout(to);
+        if (signal) signal.removeEventListener("abort", onAbort);
+        resolve(v);
+      },
+      (err) => {
+        if (done) return;
+        done = true;
+        if (to) clearTimeout(to);
+        if (signal) signal.removeEventListener("abort", onAbort);
+        reject(err);
+      }
+    );
+  });
+}
+
+function sleep(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) return reject(new Error("Sleep aborted"));
+    const t = setTimeout(() => resolve(), ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(t);
+      reject(new Error("Sleep aborted"));
+    }, { once: true });
+  });
 }

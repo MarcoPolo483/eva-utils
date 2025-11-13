@@ -1,16 +1,16 @@
 type State = "closed" | "open" | "half-open";
 
 export type CircuitBreakerOptions = {
-  failureThreshold?: number; // failures before opening
-  successThreshold?: number; // successes in half-open to close
-  cooldownMs?: number;       // how long to stay open before half-open
+  failureThreshold?: number; // errors before opening
+  successThreshold?: number; // successes needed in half-open to close
+  cooldownMs?: number;       // open duration before attempting half-open
 };
 
 export class CircuitBreaker {
   private state: State = "closed";
   private failures = 0;
   private successes = 0;
-  private nextTry = 0;
+  private nextTryAt = 0;
 
   constructor(private opts: CircuitBreakerOptions = {}) {}
 
@@ -21,24 +21,26 @@ export class CircuitBreaker {
     const cooldownMs = Math.max(1000, this.opts.cooldownMs ?? 10000);
 
     if (this.state === "open") {
-      if (now >= this.nextTry) {
+      if (now >= this.nextTryAt) {
         this.state = "half-open";
+        this.failures = 0;
+        this.successes = 0;
       } else {
-        throw new Error("CircuitBreaker: open");
+        throw new Error("Circuit open");
       }
     }
 
     try {
-      const result = await fn();
+      const res = await fn();
       if (this.state === "half-open") {
         this.successes++;
         if (this.successes >= successThreshold) {
           this.close();
         }
       } else {
-        this.reset();
+        this.resetCounts();
       }
-      return result;
+      return res;
     } catch (e) {
       this.failures++;
       if (this.state === "half-open" || this.failures >= failureThreshold) {
@@ -48,21 +50,18 @@ export class CircuitBreaker {
     }
   }
 
-  private open(cooldownMs: number) {
+  private open(ms: number) {
     this.state = "open";
-    this.nextTry = Date.now() + cooldownMs;
-    this.failures = 0;
-    this.successes = 0;
+    this.nextTryAt = Date.now() + ms;
   }
 
   private close() {
     this.state = "closed";
-    this.failures = 0;
-    this.successes = 0;
-    this.nextTry = 0;
+    this.nextTryAt = 0;
+    this.resetCounts();
   }
 
-  private reset() {
+  private resetCounts() {
     this.failures = 0;
     this.successes = 0;
   }

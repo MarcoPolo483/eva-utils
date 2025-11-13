@@ -1,12 +1,10 @@
-type LoggerOptions = {
+import { Logger as PinoLogger, LoggerOptions } from "pino";
+export type Logger = PinoLogger;
+export type CreateLoggerOptions = {
     service?: string;
+    level?: LoggerOptions["level"];
+    redact?: string[];
+    base?: Record<string, unknown>;
 };
-export type Logger = {
-    info: (msg: string, data?: Record<string, unknown>) => void;
-    warn: (msg: string, data?: Record<string, unknown>) => void;
-    error: (msg: string, data?: Record<string, unknown>) => void;
-    debug: (msg: string, data?: Record<string, unknown>) => void;
-};
-export declare function createLogger(opts?: LoggerOptions): Logger;
-export {};
+export declare function createLogger(opts?: CreateLoggerOptions): Logger;
 //# sourceMappingURL=logger.d.ts.map

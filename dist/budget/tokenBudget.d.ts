@@ -5,7 +5,7 @@ export declare class TokenBudget {
     private opts;
     private used;
     constructor(opts: TokenBudgetOptions);
-    spend(tokens: number): void;
+    spend(n: number): void;
     remaining(): number;
     reset(): void;
 }

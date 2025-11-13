@@ -4,14 +4,14 @@ export class TokenBudget {
     constructor(opts) {
         this.opts = opts;
         if (opts.limit <= 0)
-            throw new Error("TokenBudget: limit must be > 0");
+            throw new Error("TokenBudget.limit must be > 0");
     }
-    spend(tokens) {
-        if (tokens < 0)
-            throw new Error("TokenBudget: cannot spend negative tokens");
-        if (this.used + tokens > this.opts.limit)
-            throw new Error("TokenBudget: exceeded");
-        this.used += tokens;
+    spend(n) {
+        if (n < 0)
+            throw new Error("Cannot spend negative tokens");
+        if (this.used + n > this.opts.limit)
+            throw new Error("Budget exceeded");
+        this.used += n;
     }
     remaining() {
         return this.opts.limit - this.used;

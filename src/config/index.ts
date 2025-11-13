@@ -1,27 +1,42 @@
-export type Config = {
-  env: string;
-  region: string;
-  keyVaultUri?: string;
-  // Add more shared config as needed
-};
+import "dotenv/config";
+import { z } from "zod";
+
+export const ConfigSchema = z.object({
+  env: z.string().default(process.env.NODE_ENV || "development"),
+  region: z.string().default(process.env.EVA_REGION || "eastus"),
+  keyVaultUri: z.string().url().optional(),
+});
+
+export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(overrides?: Partial<Config>): Config {
-  // Env-first configuration. Extend with file/env layering if needed.
-  const env = process.env.NODE_ENV || "development";
-  const region = process.env.EVA_REGION || "eastus";
-  const keyVaultUri = process.env.KEYVAULT_URI || undefined;
-
-  return {
-    env,
-    region,
-    keyVaultUri,
-    ...overrides
-  };
+  const cfg = ConfigSchema.parse({
+    env: process.env.NODE_ENV,
+    region: process.env.EVA_REGION,
+    keyVaultUri: process.env.KEYVAULT_URI,
+    ...overrides,
+  });
+  return cfg;
 }
 
-// Placeholder for future Key Vault integration
 export type SecretResolver = (name: string) => Promise<string | undefined>;
-export async function resolveSecret(_name: string, _resolver?: SecretResolver): Promise<string | undefined> {
-  // Implement Azure Key Vault / Managed Identity fetch in later iteration.
-  return undefined;
+
+/**
+ * Resolve a secret by name. If KEYVAULT_URI is provided and azure SDKs are available, it attempts Key Vault.
+ * This function dynamically imports Azure SDKs so they can remain optional.
+ */
+export async function resolveSecret(name: string, keyVaultUri = process.env.KEYVAULT_URI): Promise<string | undefined> {
+  if (!keyVaultUri) return undefined;
+
+  try {
+    // Dynamic imports to keep Azure libs optional
+    const { DefaultAzureCredential } = await import("@azure/identity");
+    const { SecretClient } = await import("@azure/keyvault-secrets");
+    const client = new SecretClient(keyVaultUri, new DefaultAzureCredential());
+    const resp = await client.getSecret(name);
+    return resp.value;
+  } catch (e) {
+    // Swallow and return undefined to allow fallback
+    return undefined;
+  }
 }
