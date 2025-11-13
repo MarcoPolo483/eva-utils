@@ -29,7 +29,7 @@
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
     "dotenv": "^16.4.5",
-    "pino": "^9.4.0",
+    "pino": "^10.1.0",
     "zod": "^3.23.8"
   },
   "optionalDependencies": {
