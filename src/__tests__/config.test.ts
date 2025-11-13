@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { loadConfig } from "../config/index.js";
 
 describe("loadConfig", () => {

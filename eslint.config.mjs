@@ -9,7 +9,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["**/*.ts"],
-    ignores: ["dist", "node_modules"],
+    ignores: ["dist/**", "node_modules/**", "*.cjs", "*.d.ts", "**/*.d.ts"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {

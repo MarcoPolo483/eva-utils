@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { CircuitBreaker } from "../retry/circuitBreaker.js";
 
 describe("CircuitBreaker", () => {

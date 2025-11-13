@@ -1,4 +1,6 @@
-import pino, { Logger as PinoLogger, LoggerOptions } from "pino";
+import type { Logger as PinoLogger, LoggerOptions } from "pino";
+import pino from "pino";
+
 import { getTraceContext } from "../otel/context.js";
 
 export type Logger = PinoLogger;

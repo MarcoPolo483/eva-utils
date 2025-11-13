@@ -1,4 +1,5 @@
-import { expoDelay, BackoffOptions } from "./backoff.js";
+import type { BackoffOptions } from "./backoff.js";
+import { expoDelay } from "./backoff.js";
 
 export type RetryOptions = BackoffOptions & {
   retries?: number;          // number of retries (not attempts)
