@@ -22,12 +22,23 @@ export function createLogger(opts: CreateLoggerOptions = {}): Logger {
       ...(opts.base ?? {}),
     },
     hooks: {
-      logMethod(args, method) {
+      logMethod(inputArgs, method) {
+        // Pino signature: logger.info(obj, msg) or logger.info(msg)
+        const [first, second] = inputArgs;
         const ctx = getTraceContext();
-        if (args.length > 1 && typeof args[1] === "object") {
-          (method as any).apply(this, [args[0], { ...(args[1] as object), ...ctx }]);
+
+        if (second !== undefined) {
+          // Called as logger.info(obj, msg)
+          const obj = first as Record<string, unknown>;
+          const msg = second as string;
+          (method as (obj: Record<string, unknown>, msg: string) => void).call(this, { ...obj, ...ctx }, msg);
+        } else if (typeof first === "string") {
+          // Called as logger.info(msg)
+          (method as (obj: Record<string, unknown>, msg: string) => void).call(this, ctx, first);
         } else {
-          (method as any).apply(this, [args[0], ctx]);
+          // Called as logger.info(obj)
+          const obj = first as Record<string, unknown>;
+          (method as (obj: Record<string, unknown>) => void).call(this, { ...obj, ...ctx });
         }
       },
     },

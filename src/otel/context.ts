@@ -1,11 +1,13 @@
+import type { Context } from "@opentelemetry/api";
 import { context, trace, TraceFlags } from "@opentelemetry/api";
 
 /**
  * Returns trace correlation fields if there is an active span.
  * Used by the logger hook to append traceId/spanId/sample flag.
  */
-export function getTraceContext(): Record<string, unknown> {
-  const span = trace.getSpan(context.active());
+export function getTraceContext(ctx?: Context): Record<string, unknown> {
+  const activeContext = ctx ?? context.active();
+  const span = trace.getSpan(activeContext);
   const sc = span?.spanContext();
   if (!sc) return {};
   return {

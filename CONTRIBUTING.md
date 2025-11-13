@@ -1,6 +1,6 @@
-# Contributing to eva-utils
+# Contributing to eva-core
 
-- Run `npm ci` then `npm run check` before opening a PR.
-- PRs must be green on CI; coverage must not regress.
-- Keep public APIs typed and documented with JSDoc.
-- Use conventional commits (feat:, fix:, chore:, docs:, refactor:, test:).
+- Use `npm run check` (typecheck + lint + test) before opening a PR.
+- Keep public APIs typed and documented.
+- Prefer small, composable modules over large classes.
+- Use conventional commits and keep PRs focused.

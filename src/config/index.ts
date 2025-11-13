@@ -35,7 +35,7 @@ export async function resolveSecret(name: string, keyVaultUri = process.env.KEYV
     const client = new SecretClient(keyVaultUri, new DefaultAzureCredential());
     const resp = await client.getSecret(name);
     return resp.value;
-  } catch (e) {
+  } catch {
     // Swallow and return undefined to allow fallback
     return undefined;
   }

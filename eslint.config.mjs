@@ -5,11 +5,13 @@ import prettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
+  {
+    ignores: ["dist/**", "node_modules/**", "coverage/**", "*.cjs", "**/*.d.ts", "vitest.config.ts"]
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     files: ["**/*.ts"],
-    ignores: ["dist/**", "node_modules/**", "*.cjs", "*.d.ts", "**/*.d.ts"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -18,9 +20,7 @@ export default tseslint.config(
         sourceType: "module"
       }
     },
-    plugins: {
-      import: importPlugin
-    },
+    plugins: { import: importPlugin },
     rules: {
       "import/order": ["error", { "newlines-between": "always" }],
       "@typescript-eslint/consistent-type-imports": "error",
