@@ -6,7 +6,14 @@ import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", "coverage/**", "*.cjs", "**/*.d.ts", "vitest.config.ts"]
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "coverage/**",
+      "*.cjs",
+      "**/*.d.ts",
+      "vitest.config.ts",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -17,16 +24,16 @@ export default tseslint.config(
       parserOptions: {
         project: "./tsconfig.json",
         tsconfigRootDir: import.meta.dirname,
-        sourceType: "module"
-      }
+        sourceType: "module",
+      },
     },
     plugins: { import: importPlugin },
     rules: {
       "import/order": ["error", { "newlines-between": "always" }],
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-floating-promises": "warn",
-      "no-console": "off"
-    }
+      "no-console": "off",
+    },
   },
-  prettier
+  prettier,
 );
