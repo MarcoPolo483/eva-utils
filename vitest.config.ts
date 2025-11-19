@@ -10,14 +10,12 @@ export default defineConfig({
       statements: 80,
       branches: 70,
       exclude: [
-        "src/index.ts",          // re-export surface
-        "src/spi/**",            // interfaces only
-        "src/domain/messages.ts",// types only
-        "src/examples/**"        // demo only
+        "src/index.ts", // re-export barrel
+        "src/**/*.d.ts", // type declarations (not executed)
       ],
     },
     environment: "node",
     include: ["src/__tests__/**/*.test.ts"],
-    globals: true
-  }
+    globals: true,
+  },
 });
