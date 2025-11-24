@@ -43,7 +43,7 @@
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.4",
+    "vitest": "^4.0.13",
     "typescript-eslint": "^8.10.0"
   },
   "lint-staged": {
